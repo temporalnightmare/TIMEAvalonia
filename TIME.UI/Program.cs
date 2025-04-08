@@ -2,9 +2,7 @@
 using TIME.Library.Interfaces;
 using TIME.Library.Services;
 using TIME.UI.ViewModels;
-using TIME.UI.ViewModels.SubViewModels;
 using TIME.UI.Views;
-using TIME.UI.Views.SubViews;
 
 namespace TIME.UI;
 
@@ -38,7 +36,7 @@ internal sealed class Program
         services.AddTransient<PageHashGeneratorView>();
         services.AddTransient<PageHideFileEditorView>();
         services.AddTransient<PageStringEditorView>();
-        services.AddTransient<SubPageWWE2K24View>();
+
 
         // Register ViewModels
         services.AddSingleton<MainWindowViewModel>();
@@ -47,7 +45,6 @@ internal sealed class Program
         services.AddTransient<PageHashGeneratorViewModel>();
         services.AddTransient<PageHideFileEditorViewModel>();
         services.AddTransient<PageStringEditorViewModel>();
-        services.AddTransient<SubPageWWE2K24ViewModel>();
 
         // Register Services
         services.AddSingleton<IFileDialog, FileDialog>();
