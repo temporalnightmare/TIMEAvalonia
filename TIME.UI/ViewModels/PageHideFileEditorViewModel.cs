@@ -18,22 +18,50 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
     private readonly IServiceProvider _serviceProvider;
 
     [ObservableProperty] private ObservableCollection<FlagItem> _flagItems = new();
-    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K24MyFactionItems;
-    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K24MyRiseItems;
-    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K24ShowcaseItems;
-    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K24VCItems;
-    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K25MyFactionItems;
-    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K25MyRiseItems;
-    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K25ShowcaseItems;
-    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K25VCItems;
+    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K24MyFactionItems = new();
+    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K24MyRiseItems = new();
+    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K24ShowcaseItems = new();
+    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K24VCItems = new();
+    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K25MyFactionItems = new();
+    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K25MyRiseItems = new();
+    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K25ShowcaseItems = new();
+    [ObservableProperty] private ObservableCollection<FlagItem> _wwe2K25VCItems = new();
     [ObservableProperty] private int _selectedGameIndex;
     [ObservableProperty] private bool _isWWE2K22Selected;
     [ObservableProperty] private bool _isWWE2K23Selected;
     [ObservableProperty] private bool _isWWE2K24Selected;
     [ObservableProperty] private bool _isWWE2K25Selected;
     [ObservableProperty] private string _filePath = string.Empty;
-    //[ObservableProperty] private UserControl _currentGame;
-    
+
+    public ObservableCollection<FlagItem> WWE2K24MyRiseItems
+    {
+        get
+        {
+            var items = FlagItems.Where(x => x.Category == "WWE2K24_MyRISE").ToList();
+            var view = CollectionViewSource.GetDefaultView(items);
+            view.GroupDescriptions?.Add(new PropertyGroupDescription("SubCategory"));
+            return new ObservableCollection<FlagItem>(items);
+        }
+    }
+
+    private void UpdateCollections()
+    {
+        Wwe2K24MyFactionItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K24_MyFACTION" && IsWWE2K24Selected));
+
+        var myRiseItems = FlagItems.Where(x => x.Category == "WWE2K24_MyRISE" && IsWWE2K24Selected).ToList();
+        var myRiseView = CollectionViewSource.GetDefaultView(myRiseItems);
+        myRiseView.GroupDescriptions?.Add(new PropertyGroupDescription("SubCategory"));
+        Wwe2K24MyRiseItems = new ObservableCollection<FlagItem>(myRiseItems);
+
+        Wwe2K24ShowcaseItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K24_SHOWCASE" && IsWWE2K24Selected));
+        Wwe2K24VCItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K24_VC" && IsWWE2K24Selected));
+
+        Wwe2K25MyFactionItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K25_MyFACTION" && IsWWE2K25Selected));
+        Wwe2K25MyRiseItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K25_MyRISE" && IsWWE2K25Selected));
+        Wwe2K25ShowcaseItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K25_SHOWCASE" && IsWWE2K25Selected));
+        Wwe2K25VCItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K25_VC" && IsWWE2K25Selected));
+    }
+
     public ICollectionView GroupedFlagItems { get; private set; }
 
     public PageHideFileEditorViewModel(IFileDialog fileDialog, IServiceProvider serviceProvider)
@@ -56,19 +84,12 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
         GroupedFlagItems.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
     }
 
-    partial void OnIsWWE2K24SelectedChanged(bool value) => OnPropertyChanged(nameof(WWE2K24MyFactionItems));
-    partial void OnIsWWE2K25SelectedChanged(bool value) => OnPropertyChanged(nameof(WWE2K25MyFactionItems));
+    partial void OnIsWWE2K24SelectedChanged(bool value) => UpdateCollections();
+    partial void OnIsWWE2K25SelectedChanged(bool value) => UpdateCollections();
 
     partial void OnFlagItemsChanged(ObservableCollection<FlagItem> value)
     {
-        OnPropertyChanged(nameof(WWE2K24MyFactionItems));
-        OnPropertyChanged(nameof(WWE2K24MyRiseItems));
-        OnPropertyChanged(nameof(WWE2K24ShowcaseItems));
-        OnPropertyChanged(nameof(WWE2K24VCItems));
-        OnPropertyChanged(nameof(WWE2K25MyFactionItems));
-        OnPropertyChanged(nameof(WWE2K25MyRiseItems));
-        OnPropertyChanged(nameof(WWE2K25ShowcaseItems));
-        OnPropertyChanged(nameof(WWE2K25VCItems));
+        UpdateCollections();
     }
 
     [RelayCommand]
@@ -100,49 +121,45 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
     [RelayCommand]
     public async Task EnableMyFactionContentAsync()
     {
-        if (WWE2K24MyFactionItems != null)
+        var myFactionItems = FlagItems.Where(x => x.Category == "WWE2K24_MyFACTION" && !x.IsChecked).ToList();  
+        foreach (var item in myFactionItems)
         {
-            foreach (var item in WWE2K24MyFactionItems)
+            if (!item.IsChecked)
             {
-                if (!item.IsChecked)
-                {
-                    item.IsChecked = true;
-                    await SetFlagAsync(item.Position, item.UnlockedValue);
-                }
+                item.IsChecked = true;
+                await SetFlagAsync(item.Position, item.UnlockedValue);
             }
-        }
+        } 
     }
 
     [RelayCommand]
     public async Task EnableMyRiseContentAsync()
     {
-        if (WWE2K24MyRiseItems != null)
+        var myRiseItems = FlagItems.Where(x => x.Category == "WWE2K24_MyRISE" && !x.IsChecked).ToList();
+        foreach (var item in myRiseItems)
         {
-            foreach (var item in WWE2K24MyRiseItems)
+            if (!item.IsChecked)
             {
-                if (!item.IsChecked)
-                {
-                    item.IsChecked = true;
-                    await SetFlagAsync(item.Position, item.UnlockedValue);
-                }
+                item.IsChecked = true;
+                await SetFlagAsync(item.Position, item.UnlockedValue);
             }
         }
+        
     }
 
     [RelayCommand]
     public async Task EnableShowcaseContentAsync()
     {
-        if (WWE2K24ShowcaseItems != null)
+        var myRiseItems = FlagItems.Where(x => x.Category == "WWE2K24_MyRISE" && !x.IsChecked).ToList();
+        foreach (var item in myRiseItems)
         {
-            foreach (var item in WWE2K24ShowcaseItems)
+            if (!item.IsChecked)
             {
-                if (!item.IsChecked)
-                {
-                    item.IsChecked = true;
-                    await SetFlagAsync(item.Position, item.UnlockedValue);
-                }
+                item.IsChecked = true;
+                await SetFlagAsync(item.Position, item.UnlockedValue);
             }
         }
+        
     }
 
     [RelayCommand]
@@ -213,7 +230,7 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
         }
     }
 
-    private async Task SetFlagAsync(int position, byte value)
+    private async Task SetFlagAsync(int position, int value)
     {
         try
         {
@@ -230,7 +247,8 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
                 }
 
                 stream.Position = position;
-                await stream.WriteAsync(new byte[] { value }, 0, 1);
+                stream.WriteByte((byte)value);
+                await stream.FlushAsync();
 
                 // For MyFaction category, when setting to 0x02, also set next byte to 0x00
                 var flagItem = FlagItems.FirstOrDefault(f => f.Position == position);
@@ -568,82 +586,82 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
 
         // Add MyFACTION items, some will have 2 bytes and not 1.
 
-        FlagItems.Add(new FlagItem("ASUKA (DM)", 431790, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("BECKY LYNCH '18", 429798, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("BIANCA BELAIR (DM)", 417618, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("BIG E", 418270, "WWE2K24_MyFACTION", 2, 9));
+        FlagItems.Add(new FlagItem("ASUKA (DM)", 431790, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("BECKY LYNCH '18", 429798, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("BIANCA BELAIR (DM)", 417618, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("BIG E", 418270, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
         FlagItems.Add(new FlagItem("\"BIG POPPA PUMP\" SCOTT STEINER", 470726, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("BOOKER T '01", 455986, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("BRON BREAKKER '23", 462722, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("CHAD GABLE '16", 435190, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("CM PUNK '10", 458306, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("CM PUNK '10 (MASKED)", 443974, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("CM PUNK (PIPER)", 472794, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("CM PUNK (S.E.S.)", 471562, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("DAMIAN PRIEST", 420802, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("DOMINIK MYSTERIO (MASKED)", 433466, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("\"ELITE\" HULK HOGAN", 450522, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("\"ELITE\" JOHN CENA", 417166, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("\"ELITE\" THE ROCK", 443750, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("\"ELITE\" ROMAN REIGNS", 416066, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("\"ELITE\" TIFFANY STRATTON", 480942, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("\"ICHIBAN\" HULK HOGAN", 469522, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("HOLLYWOOD HOGAN (WOLFPAC)", 416790, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("THE HURRICANE", 420910, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("JAUN CENA", 429506, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("KEVIN NASH (WOLFPAC)", 432598, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("KEVIN OWENS (STONE COLD)", 454906, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("KING NAKAMURA", 418150, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("LEX LUGER (WOLFPAC)", 421878, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("LIV MORGAN '22", 456778, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("\"MACHO MAN\" RANDY SAVAGE (WOLFPAC)", 435430, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("MANKIND '96", 430986, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("MICHIN (DM)", 437378, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("MR. PERFECT (WOLFPAC)", 482578, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("RANDY ORTON '09", 428870, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("RAQUEL RODRIGUEZ (DM)", 425542, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("\"RAVISHING\" RICK RUDE (WOLFPAC)", 466078, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("RHEA RIPLEY (CROWN JEWEL)", 474810, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("RHEA RIPLEY (HHH)", 472094, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("ROMAN REIGNS '24", 479654, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("ROMAN REIGNS (DM)", 477078, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("SCOTT HALL (WOLFPAC)", 463070, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("SCOTT STEINER (WOLFPAC)", 476614, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("SETH ROLLINS '14", 450086, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("SETH ROLLINS '15", 419670, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("SHAWN MICHAELS (HOGAN)", 447686, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("SHEAMUS '09", 431114, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("\"SLIM JIM\" MACHO MAN RANDY SAVAGE", 442978, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("THE ROCK '24", 413046, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("TRICK WILLIAMS '22", 421970, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("TRIPLE H (KING OF KINGS)", 414950, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("UNDERTAKER (HBK)", 427450, "WWE2K24_MyFACTION", 2, 9));
-        FlagItems.Add(new FlagItem("XAVIER WOODS (DM)", 484946, "WWE2K24_MyFACTION", 2, 9));
+        FlagItems.Add(new FlagItem("BOOKER T '01", 455986, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("BRON BREAKKER '23", 462722, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("CHAD GABLE '16", 435190, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("CM PUNK '10", 458306, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("CM PUNK '10 (MASKED)", 443974, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("CM PUNK (PIPER)", 472794, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("CM PUNK (S.E.S.)", 471562, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("DAMIAN PRIEST", 420802, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("DOMINIK MYSTERIO (MASKED)", 433466, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"ELITE\" HULK HOGAN", 450522, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"ELITE\" JOHN CENA", 417166, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"ELITE\" THE ROCK", 443750, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"ELITE\" ROMAN REIGNS", 416066, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"ELITE\" TIFFANY STRATTON", 480942, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"ICHIBAN\" HULK HOGAN", 469522, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("HOLLYWOOD HOGAN (WOLFPAC)", 416790, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("THE HURRICANE", 420910, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("JAUN CENA", 429506, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("KEVIN NASH (WOLFPAC)", 432598, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("KEVIN OWENS (STONE COLD)", 454906, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("KING NAKAMURA", 418150, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("LEX LUGER (WOLFPAC)", 421878, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("LIV MORGAN '22", 456778, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"MACHO MAN\" RANDY SAVAGE (WOLFPAC)", 435430, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("MANKIND '96", 430986, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("MICHIN (DM)", 437378, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("MR. PERFECT (WOLFPAC)", 482578, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("RANDY ORTON '09", 428870, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("RAQUEL RODRIGUEZ (DM)", 425542, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"RAVISHING\" RICK RUDE (WOLFPAC)", 466078, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("RHEA RIPLEY (CROWN JEWEL)", 474810, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("RHEA RIPLEY (HHH)", 472094, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("ROMAN REIGNS '24", 479654, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("ROMAN REIGNS (DM)", 477078, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("SCOTT HALL (WOLFPAC)", 463070, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("SCOTT STEINER (WOLFPAC)", 476614, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("SETH ROLLINS '14", 450086, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("SETH ROLLINS '15", 419670, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("SHAWN MICHAELS (HOGAN)", 447686, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("SHEAMUS '09", 431114, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"SLIM JIM\" MACHO MAN RANDY SAVAGE", 442978, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("THE ROCK '24", 413046, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("TRICK WILLIAMS '22", 421970, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("TRIPLE H (KING OF KINGS)", 414950, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("UNDERTAKER (HBK)", 427450, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("XAVIER WOODS (DM)", 484946, "WWE2K24_MyFACTION", 2, 9) { SubCategory = "Characters" });
 
         // Add MyRise items, some will have 2 bytes and not 1.
 
-        FlagItems.Add(new FlagItem("ARE: CAPTIVE AUDIENCE TALK SHOW", 1360683, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: ARENA ESTATAL.", 1361314, "WWE2K24_MyRISE", 2, 4)); // 2 BYTES
-        FlagItems.Add(new FlagItem("ARE: CLUB U.K.", 1366490, "WWE2K24_MyRISE", 2, 4)); // 2 BYTES
-        FlagItems.Add(new FlagItem("ARE: DOWN-UP-DOWN-UP ARENA", 1366490, "WWE2K24_MyRISE", 2, 4)); // 2 BYTES
-        FlagItems.Add(new FlagItem("ARE: GM OFFICE - THE MIZ", 1362927, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: INTERVIEW SET - RAW", 3164739, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: LOCKER ROOM - SMACKDOWN", 1363891, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: LOCKER ROOM - WOMEN'S - RAW", 1361407, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: JAPAN DOME", 1362287, "WWE2K24_MyRISE", 2, 4)); // 2 BYTES
-        FlagItems.Add(new FlagItem("ARE: JAPAN HALL - BACKSTAGE", 1362287, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: JOSHI JAPAN", 1364274, "WWE2K24_MyRISE", 2, 4)); // 2 BYTES
-        FlagItems.Add(new FlagItem("ARE: LAW - BACKSTAGE", 1360439, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: MOTION CAPTURE STUDIO", 1363962, "WWE2K24_MyRISE", 2, 4)); // 2 BYTES
-        FlagItems.Add(new FlagItem("ARE: MOVIE SET", 1367215, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: PERFORMANCE CENTER - WEIGHT ROOM", 1367395, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: SMACKDOWN", 1354323, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: SUMMERSLAM - RED CARPET", 1367867, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: SUPERNATURAL LAIR", 1361847, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: TDB ARENA (EMPTY)", 833975, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: TDB BACKSTAGE", 1360751, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: TRAINER'S ROOM", 1365747, "WWE2K24_MyRISE", 2, 4));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA - MYRISE", 1361914, "WWE2K24_MyRISE", 2, 4)); // 2 BYTES
+        FlagItems.Add(new FlagItem("CAPTIVE AUDIENCE TALK SHOW", 1360683, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("ARENA ESTATAL.", 1361314, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" }); // 2 BYTES
+        FlagItems.Add(new FlagItem("CLUB U.K.", 1366490, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" }); // 2 BYTES
+        FlagItems.Add(new FlagItem("DOWN-UP-DOWN-UP ARENA", 1366490, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" }); // 2 BYTES
+        FlagItems.Add(new FlagItem("GM OFFICE - THE MIZ", 1362927, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("INTERVIEW SET - RAW", 3164739, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("LOCKER ROOM - SMACKDOWN", 1363891, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("LOCKER ROOM - WOMEN'S - RAW", 1361407, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("JAPAN DOME", 1362287, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" }); // 2 BYTES
+        FlagItems.Add(new FlagItem("JAPAN HALL - BACKSTAGE", 1362287, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("JOSHI JAPAN", 1364274, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" }); // 2 BYTES
+        FlagItems.Add(new FlagItem("LAW - BACKSTAGE", 1360439, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("MOTION CAPTURE STUDIO", 1363962, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" }); // 2 BYTES
+        FlagItems.Add(new FlagItem("MOVIE SET", 1367215, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("PERFORMANCE CENTER - WEIGHT ROOM", 1367395, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("SMACKDOWN", 1354323, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("SUMMERSLAM - RED CARPET", 1367867, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("SUPERNATURAL LAIR", 1361847, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("TDB ARENA (EMPTY)", 833975, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("TDB BACKSTAGE", 1360751, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("TRAINER'S ROOM", 1365747, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA - MYRISE", 1361914, "WWE2K24_MyRISE", 2, 4) { SubCategory = "Arenas" }); // 2 BYTES
 
         // Add Showcase Items
         
