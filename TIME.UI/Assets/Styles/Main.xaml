@@ -76,4 +76,26 @@
             </Trigger>
         </Style.Triggers>
     </Style>
+
+    <!-- Common style for checkboxes to maintain consistency -->
+    <Style x:Key="FlagCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="Margin" Value="10,5"/>
+        <Setter Property="Width" Value="250"/>
+    </Style>
+    <!-- Common style for category headers -->
+    <Style x:Key="CategoryGroupBoxStyle" TargetType="GroupBox">
+        <Setter Property="Margin" Value="5"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="5"/>
+        <Setter Property="HeaderTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}"
+                              FontWeight="Bold"
+                              Margin="5"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

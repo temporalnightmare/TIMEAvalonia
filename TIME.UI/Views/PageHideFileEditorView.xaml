@@ -4,9 +4,99 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TIME.UI.Views"
+             xmlns:vm="clr-namespace:TIME.UI.ViewModels"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" Background="#222222"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Margin="20">
-        <TextBlock Text="You can run but you can't hide!" Foreground="#cccccc"/>
-    </Grid>
+    <materialDesign:Card Margin="16" Padding="16" Background="{DynamicResource MaterialDesignPaper}">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0 8">
+                <Button 
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    materialDesign:ButtonAssist.CornerRadius="4" 
+                    Command="{Binding OpenHideFileAsyncCommand}"
+                    Margin="0 0 16 0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FolderOpen" Margin="0 0 8 0"/>
+                        <TextBlock Text="Open File"/>
+                    </StackPanel>
+                </Button>
+
+                <ComboBox 
+                    Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                    materialDesign:HintAssist.HelperText="Select Game"
+                    Width="200"
+                    Margin="0 0 16 0"
+                    SelectedIndex="{Binding SelectedGameIndex}">
+                    <ComboBoxItem Content="WWE 2K22"/>
+                    <ComboBoxItem Content="WWE 2K23"/>
+                    <ComboBoxItem Content="WWE 2K24"/>
+                    <ComboBoxItem Content="WWE 2K25"/>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Content Grid -->
+            <ContentControl Grid.Row="1" Grid.ColumnSpan="2" Content="{Binding CurrentGame}" Margin="0 16"/>
+
+            <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button 
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    materialDesign:ButtonAssist.CornerRadius="4"
+                    Margin="8 0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="UnlockedAddOutline" Margin="0 0 8 0"/>
+                        <TextBlock Text="Enable MyFaction Content"/>
+                    </StackPanel>
+                </Button>
+                <Button 
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    materialDesign:ButtonAssist.CornerRadius="4"
+                    Margin="8 0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="UnlockedAddOutline" Margin="0 0 8 0"/>
+                        <TextBlock Text="Enable MyRise Content"/>
+                    </StackPanel>
+                </Button>
+                <Button 
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    materialDesign:ButtonAssist.CornerRadius="4"
+                    Margin="8 0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="UnlockedAddOutline" Margin="0 0 8 0"/>
+                        <TextBlock Text="Enable Showcase Content"/>
+                    </StackPanel>
+                </Button>
+                <Button 
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    materialDesign:ButtonAssist.CornerRadius="4"
+                    Margin="8 0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="UnlockedAddOutline" Margin="0 0 8 0"/>
+                        <TextBlock Text="Enable VC Content"/>
+                    </StackPanel>
+                </Button>
+                <Button 
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    materialDesign:ButtonAssist.CornerRadius="4"
+                    Margin="8 0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="UnlockedAddOutline" Margin="0 0 8 0"/>
+                        <TextBlock Text="Enable Everything!"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </materialDesign:Card>
+    
 </UserControl>

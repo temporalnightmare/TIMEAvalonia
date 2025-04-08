@@ -8,16 +8,16 @@ public partial class FlagItem : ObservableObject
     private bool _isChecked;
 
     [ObservableProperty]
-    private string _label;
+    private string _name;
 
     public int Position { get; }
     public string Category { get; } = string.Empty;
     public byte UnlockedValue { get; } // Value when enabled
     public byte DefaultValue { get; }  // Value when disabled
 
-    public FlagItem(string label, int position, string category, byte unlockedValue, byte defaultValue, bool initialState = false)
+    public FlagItem(string name, int position, string category, byte unlockedValue, byte defaultValue, bool initialState = false)
     {
-        Label = label;
+        Name = name;
         Position = position;
         Category = category;
         UnlockedValue = unlockedValue;
