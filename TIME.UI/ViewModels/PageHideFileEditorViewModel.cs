@@ -34,27 +34,11 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
     private ICollectionView _showcaseView;
     private ObservableCollection<FlagItem> _showcaseItems;
 
-    public ICollectionView WWE2K24ShowcaseItems
+    private ICollectionView ConfigureGrouping(ICollectionView view, string propertyName)
     {
-        get
-        {
-            if (_showcaseView == null)
-            {
-                _showcaseItems = new ObservableCollection<FlagItem>();
-                _showcaseView = CollectionViewSource.GetDefaultView(_showcaseItems);
-                _showcaseView.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
-            }
-
-            // Update items
-            _showcaseItems.Clear();
-            var items = FlagItems.Where(x => x.Category == "WWE2K24_SHOWCASE" && IsWWE2K24Selected);
-            foreach (var item in items)
-            {
-                _showcaseItems.Add(item);
-            }
-
-            return _showcaseView;
-        }
+        view.GroupDescriptions.Clear();
+        view.GroupDescriptions.Add(new PropertyGroupDescription(propertyName));
+        return view;
     }
 
     public ObservableCollection<FlagItem> GetOrCreateCategoryCollection(string category, bool isSelected)
@@ -86,13 +70,10 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
             }
         }
 
-        // Refresh all collection views to maintain grouping
-        var showcaseView = CollectionViewSource.GetDefaultView(WWE2K24ShowcaseItems);
-        if (showcaseView.GroupDescriptions.Count == 0)
-        {
-            showcaseView.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
-        }
-
+        // Apply grouping to all collection views
+        ConfigureGrouping(CollectionViewSource.GetDefaultView(WWE2K24MyFactionItems), "SubCategory");
+        ConfigureGrouping(CollectionViewSource.GetDefaultView(WWE2K24MyRiseItems), "SubCategory");
+     //   ConfigureGrouping(CollectionViewSource.GetDefaultView(WWE2K24ShowcaseItems), "SubCategory");
 
         OnPropertyChanged(nameof(WWE2K24MyFactionItems));
         OnPropertyChanged(nameof(WWE2K24MyRiseItems));
@@ -102,6 +83,19 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
         OnPropertyChanged(nameof(WWE2K25MyRiseItems));
         OnPropertyChanged(nameof(WWE2K25ShowcaseItems));
         OnPropertyChanged(nameof(WWE2K25VCItems));
+    }
+
+    public ICollectionView WWE2K24ShowcaseItems
+    {
+        get
+        {
+            if (_showcaseView == null)
+            {
+                _showcaseItems = new ObservableCollection<FlagItem>();
+                _showcaseView = CollectionViewSource.GetDefaultView(_showcaseItems);
+            }
+            return _showcaseView;
+        }
     }
 
     public ICollectionView GroupedFlagItems { get; private set; }
@@ -126,9 +120,11 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
         GroupedFlagItems.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
 
         // Setup Showcase grouping
-        var showcaseView = CollectionViewSource.GetDefaultView(WWE2K24ShowcaseItems);
-        showcaseView.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
+       // var showcaseView = CollectionViewSource.GetDefaultView(WWE2K24ShowcaseItems);
+       // showcaseView.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
     }
+
+
 
     partial void OnIsWWE2K24SelectedChanged(bool value) => UpdateCollections();
     partial void OnIsWWE2K25SelectedChanged(bool value) => UpdateCollections();
