@@ -1,0 +1,70 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net9.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <StartupObject>TIME.UI.Program</StartupObject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="Assets\Fonts\Phosphor-Fill.ttf" />
+        <None Remove="Assets\Fonts\Phosphor-Regular.ttf" />
+        <None Remove="Assets\Fonts\ProximaNova-Regular.otf" />
+        <None Remove="Assets\Fonts\ProximaNova-Semibold.otf" />
+        <None Remove="Assets\Fonts\ProximaNova-Thin.otf" />
+        <None Remove="Assets\Icon.ico" />
+        <None Remove="Assets\Images\Icon.png" />
+        <None Remove="Assets\Images\Icon.svg" />
+        <None Remove="Assets\Images\Logo.png" />
+        <None Remove="Assets\Images\Logo.svg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Resource Include="Assets\Icon.ico">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\TIME.Library\TIME.Library.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="Assets\Fonts\Phosphor-Fill.ttf">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\Fonts\Phosphor-Regular.ttf">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\Fonts\ProximaNova-Regular.otf">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\Fonts\ProximaNova-Semibold.otf">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\Fonts\ProximaNova-Thin.otf">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\Images\Icon.png">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\Images\Icon.svg">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\Images\Logo.png">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\Images\Logo.svg">
+          <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+    </ItemGroup>
+
+</Project>

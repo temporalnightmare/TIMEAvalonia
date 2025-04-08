@@ -1,0 +1,20 @@
+﻿<Application x:Class="TIME.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TIME.UI">
+    <Application.Resources>
+        <!-- Styling -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Assets/Styles/Main.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Fonts -->
+            <FontFamily x:Key="ProximaNovaRegular">pack://application:,,,/Assets/Fonts/#Proxima Nova Rg</FontFamily>
+            <FontFamily x:Key="ProximaNovaSemibold">pack://application:,,,/Assets/Fonts/#Proxima Nova Lt</FontFamily>
+            <FontFamily x:Key="ProximaNovaThin">pack://application:,,,/Assets/Fonts/#Proxima Nova Th</FontFamily>
+            <FontFamily x:Key="PhosphorRegular">pack://application:,,,/Assets/Fonts/#Phosphor</FontFamily>
+            <FontFamily x:Key="PhosphorFill">pack://application:,,,/Assets/Fonts/#Phosphor-Fill</FontFamily>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
