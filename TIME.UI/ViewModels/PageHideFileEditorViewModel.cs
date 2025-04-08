@@ -1,14 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using System.Windows.Controls;
 using System.Windows.Data;
 using TIME.Library.Interfaces;
 using TIME.UI.Models;
-using static MaterialDesignThemes.Wpf.Theme.ToolBar;
 
 namespace TIME.UI.ViewModels;
 
@@ -33,33 +30,78 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
     [ObservableProperty] private bool _isWWE2K25Selected;
     [ObservableProperty] private string _filePath = string.Empty;
 
-    public ObservableCollection<FlagItem> WWE2K24MyRiseItems
+    private readonly Dictionary<string, ObservableCollection<FlagItem>> _categoryCollections = new();
+    private ICollectionView _showcaseView;
+    private ObservableCollection<FlagItem> _showcaseItems;
+
+    public ICollectionView WWE2K24ShowcaseItems
     {
         get
         {
-            var items = FlagItems.Where(x => x.Category == "WWE2K24_MyRISE").ToList();
-            var view = CollectionViewSource.GetDefaultView(items);
-            view.GroupDescriptions?.Add(new PropertyGroupDescription("SubCategory"));
-            return new ObservableCollection<FlagItem>(items);
+            if (_showcaseView == null)
+            {
+                _showcaseItems = new ObservableCollection<FlagItem>();
+                _showcaseView = CollectionViewSource.GetDefaultView(_showcaseItems);
+                _showcaseView.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
+            }
+
+            // Update items
+            _showcaseItems.Clear();
+            var items = FlagItems.Where(x => x.Category == "WWE2K24_SHOWCASE" && IsWWE2K24Selected);
+            foreach (var item in items)
+            {
+                _showcaseItems.Add(item);
+            }
+
+            return _showcaseView;
         }
+    }
+
+    public ObservableCollection<FlagItem> GetOrCreateCategoryCollection(string category, bool isSelected)
+    {
+        var key = $"{category}_{isSelected}";
+        if (!_categoryCollections.TryGetValue(key, out var collection))
+        {
+            collection = new ObservableCollection<FlagItem>();
+            _categoryCollections[key] = collection;
+        }
+        return collection;
     }
 
     private void UpdateCollections()
     {
-        Wwe2K24MyFactionItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K24_MyFACTION" && IsWWE2K24Selected));
+        foreach (var key in _categoryCollections.Keys.ToList())
+        {
+            _categoryCollections[key].Clear();
+        }
 
-        var myRiseItems = FlagItems.Where(x => x.Category == "WWE2K24_MyRISE" && IsWWE2K24Selected).ToList();
-        var myRiseView = CollectionViewSource.GetDefaultView(myRiseItems);
-        myRiseView.GroupDescriptions?.Add(new PropertyGroupDescription("SubCategory"));
-        Wwe2K24MyRiseItems = new ObservableCollection<FlagItem>(myRiseItems);
+        foreach (var item in FlagItems)
+        {
+            var isWWE24 = item.Category.StartsWith("WWE2K24") && IsWWE2K24Selected;
+            var isWWE25 = item.Category.StartsWith("WWE2K25") && IsWWE2K25Selected;
+            if (isWWE24 || isWWE25)
+            {
+                var collection = GetOrCreateCategoryCollection(item.Category, true);
+                collection.Add(item);
+            }
+        }
 
-        Wwe2K24ShowcaseItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K24_SHOWCASE" && IsWWE2K24Selected));
-        Wwe2K24VCItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K24_VC" && IsWWE2K24Selected));
+        // Refresh all collection views to maintain grouping
+        var showcaseView = CollectionViewSource.GetDefaultView(WWE2K24ShowcaseItems);
+        if (showcaseView.GroupDescriptions.Count == 0)
+        {
+            showcaseView.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
+        }
 
-        Wwe2K25MyFactionItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K25_MyFACTION" && IsWWE2K25Selected));
-        Wwe2K25MyRiseItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K25_MyRISE" && IsWWE2K25Selected));
-        Wwe2K25ShowcaseItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K25_SHOWCASE" && IsWWE2K25Selected));
-        Wwe2K25VCItems = new ObservableCollection<FlagItem>(FlagItems.Where(x => x.Category == "WWE2K25_VC" && IsWWE2K25Selected));
+
+        OnPropertyChanged(nameof(WWE2K24MyFactionItems));
+        OnPropertyChanged(nameof(WWE2K24MyRiseItems));
+        OnPropertyChanged(nameof(WWE2K24ShowcaseItems));
+        OnPropertyChanged(nameof(WWE2K24VCItems));
+        OnPropertyChanged(nameof(WWE2K25MyFactionItems));
+        OnPropertyChanged(nameof(WWE2K25MyRiseItems));
+        OnPropertyChanged(nameof(WWE2K25ShowcaseItems));
+        OnPropertyChanged(nameof(WWE2K25VCItems));
     }
 
     public ICollectionView GroupedFlagItems { get; private set; }
@@ -82,6 +124,10 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
         // Setup grouping
         GroupedFlagItems = CollectionViewSource.GetDefaultView(FlagItems);
         GroupedFlagItems.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
+
+        // Setup Showcase grouping
+        var showcaseView = CollectionViewSource.GetDefaultView(WWE2K24ShowcaseItems);
+        showcaseView.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
     }
 
     partial void OnIsWWE2K24SelectedChanged(bool value) => UpdateCollections();
@@ -150,8 +196,8 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
     [RelayCommand]
     public async Task EnableShowcaseContentAsync()
     {
-        var myRiseItems = FlagItems.Where(x => x.Category == "WWE2K24_MyRISE" && !x.IsChecked).ToList();
-        foreach (var item in myRiseItems)
+        var showcaseItems = FlagItems.Where(x => x.Category == "WWE2K24_SHOWCASE" && !x.IsChecked).ToList();
+        foreach (var item in showcaseItems)
         {
             if (!item.IsChecked)
             {
@@ -165,69 +211,61 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
     [RelayCommand]
     public async Task EnableVCContentAsync()
     {
-        if (WWE2K24VCItems != null)
+        var vcItems = FlagItems.Where(x => x.Category == "WWE2K24_VC" && !x.IsChecked).ToList();
+        foreach (var item in vcItems)
         {
-            foreach (var item in WWE2K24VCItems)
+            if (!item.IsChecked)
             {
-                if (!item.IsChecked)
-                {
-                    item.IsChecked = true;
-                    await SetFlagAsync(item.Position, item.UnlockedValue);
-                }
+                item.IsChecked = true;
+                await SetFlagAsync(item.Position, item.UnlockedValue);
             }
-        }
+        }  
     }
 
     [RelayCommand]
     public async Task EnableAllContentAsync()
     {
-        if (WWE2K24MyFactionItems != null)
-        {
-            foreach (var item in WWE2K24MyFactionItems)
-            {
-                if (!item.IsChecked)
-                {
-                    item.IsChecked = true;
-                    await SetFlagAsync(item.Position, item.UnlockedValue);
-                }
-            }
-        }
+        var myFactionItems = FlagItems.Where(x => x.Category == "WWE2K24_MyFACTION" && !x.IsChecked).ToList();
+        var myRiseItems = FlagItems.Where(x => x.Category == "WWE2K24_MyRISE" && !x.IsChecked).ToList();
+        var showcaseItems = FlagItems.Where(x => x.Category == "WWE2K24_SHOWCASE" && !x.IsChecked).ToList();
+        var vcItems = FlagItems.Where(x => x.Category == "WWE2K24_VC" && !x.IsChecked).ToList();
 
-        if (WWE2K24MyRiseItems != null)
+        foreach (var item in myFactionItems)
         {
-            foreach (var item in WWE2K24MyRiseItems)
+            if (!item.IsChecked)
             {
-                if (!item.IsChecked)
-                {
-                    item.IsChecked = true;
-                    await SetFlagAsync(item.Position, item.UnlockedValue);
-                }
+                item.IsChecked = true;
+                await SetFlagAsync(item.Position, item.UnlockedValue);
             }
         }
-
-        if (WWE2K24ShowcaseItems != null)
+        
+        foreach (var item in myRiseItems)
         {
-            foreach (var item in WWE2K24ShowcaseItems)
+            if (!item.IsChecked)
             {
-                if (!item.IsChecked)
-                {
-                    item.IsChecked = true;
-                    await SetFlagAsync(item.Position, item.UnlockedValue);
-                }
+                item.IsChecked = true;
+                await SetFlagAsync(item.Position, item.UnlockedValue);
             }
         }
-
-        if (WWE2K24VCItems != null)
+        
+        foreach (var item in showcaseItems)
         {
-            foreach (var item in WWE2K24VCItems)
+            if (!item.IsChecked)
             {
-                if (!item.IsChecked)
-                {
-                    item.IsChecked = true;
-                    await SetFlagAsync(item.Position, item.UnlockedValue);
-                }
+                item.IsChecked = true;
+                await SetFlagAsync(item.Position, item.UnlockedValue);
             }
         }
+        
+        foreach (var item in vcItems)
+        {
+            if (!item.IsChecked)
+            {
+                item.IsChecked = true;
+                await SetFlagAsync(item.Position, item.UnlockedValue);
+            }
+        }
+        
     }
 
     private async Task SetFlagAsync(int position, int value)
@@ -315,13 +353,42 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
     }
 
     // Computed properties for WWE 2K24
-    public IEnumerable<FlagItem> WWE2K24MyFactionItems => FlagItems.Where(x => x.Category == "WWE2K24_MyFACTION" && IsWWE2K24Selected);
+    public ObservableCollection<FlagItem> WWE2K24MyFactionItems => new(FlagItems.Where(x => x.Category == "WWE2K24_MyFACTION" && IsWWE2K24Selected));
+    public ObservableCollection<FlagItem> WWE2K24MyRiseItems
+    {
+        get
+        {
+            var items = FlagItems.Where(x => x.Category == "WWE2K24_MyRISE" && IsWWE2K24Selected).ToList();
+            var collection = new ObservableCollection<FlagItem>(items);
+            var view = new ListCollectionView(collection);
+            view.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
+            return collection;
+        }
+    }
 
-    public IEnumerable<FlagItem> WWE2K24MyRiseItems => FlagItems.Where(x => x.Category == "WWE2K24_MyRISE" && IsWWE2K24Selected);
+    public ObservableCollection<FlagItem> WWE2K24ShowcaseItems
+    {
+        get
+        {
+            var items = FlagItems.Where(x => x.Category == "WWE2K24_SHOWCASE" && IsWWE2K24Selected).ToList();
+            var collection = new ObservableCollection<FlagItem>(items);
+            var view = new ListCollectionView(collection);
+            view.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
+            return collection;
+        }
+    }
 
-    public IEnumerable<FlagItem> WWE2K24ShowcaseItems => FlagItems.Where(x => x.Category == "WWE2K24_SHOWCASE" && IsWWE2K24Selected);
-
-    public IEnumerable<FlagItem> WWE2K24VCItems => FlagItems.Where(x => x.Category == "WWE2K24_VC" && IsWWE2K24Selected);
+    public ObservableCollection<FlagItem> WWE2K24VCItems
+    {
+        get
+        {
+            var items = FlagItems.Where(x => x.Category == "WWE2K24_VC" && IsWWE2K24Selected).ToList();
+            var collection = new ObservableCollection<FlagItem>(items);
+            var view = new ListCollectionView(collection);
+            view.GroupDescriptions.Add(new PropertyGroupDescription("SubCategory"));
+            return collection;
+        }
+    }
 
     // Computed properties for WWE 2K25
     public IEnumerable<FlagItem> WWE2K25MyFactionItems => FlagItems.Where(x => x.Category == "WWE2K25_MyFACTION" && IsWWE2K25Selected);
@@ -342,15 +409,7 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
         // Reinitialize on game change
         InitializeFlagItems();
 
-        // Notify UI that all item collections have changed
-        OnPropertyChanged(nameof(WWE2K24MyFactionItems));
-        OnPropertyChanged(nameof(WWE2K24MyRiseItems));
-        OnPropertyChanged(nameof(WWE2K24ShowcaseItems));
-        OnPropertyChanged(nameof(WWE2K24VCItems));
-        OnPropertyChanged(nameof(WWE2K25MyFactionItems));
-        OnPropertyChanged(nameof(WWE2K25MyRiseItems));
-        OnPropertyChanged(nameof(WWE2K25ShowcaseItems));
-        OnPropertyChanged(nameof(WWE2K25VCItems));
+        UpdateCollections();
     }
 
     private void InitializeFlagItems()
@@ -665,28 +724,28 @@ public partial class PageHideFileEditorViewModel : ViewBaseModel
 
         // Add Showcase Items
         
-        FlagItems.Add(new FlagItem("CHR: BRAY WYATT (SNME)", 415750, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("CHR: JOHN CENA '20", 460554, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("CHR: \"STONE COLD\" STEVE AUSTIN", 460358, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("CHR: ULTIMATE WARRIOR", 431490, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 5", 1358882, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 6", 1363578, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 8", 1360098, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 10", 1364514, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 17", 1358962, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 20", 1365954, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 25", 1354890, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 30", 1363658, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 31 - NIGHTTIME", 1362090, "WWE2K24_SHOWCASE", 2, 3));
-        FlagItems.Add(new FlagItem("ARE: WRESTLEMANIA 36", 1364418, "WWE2K24_SHOWCASE", 2, 3));
+        FlagItems.Add(new FlagItem("BRAY WYATT (SNME)", 415750, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("JOHN CENA '20", 460554, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("\"STONE COLD\" STEVE AUSTIN", 460358, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("ULTIMATE WARRIOR", 431490, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Characters" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 5", 1358882, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 6", 1363578, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 8", 1360098, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 10", 1364514, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 17", 1358962, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 20", 1365954, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 25", 1354890, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 30", 1363658, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 31 - NIGHTTIME", 1362090, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("WRESTLEMANIA 36", 1364418, "WWE2K24_SHOWCASE", 2, 3) { SubCategory = "Arenas" });
 
         // Add VC Items
 
-        FlagItems.Add(new FlagItem("ARE: ECW ONE NIGHT STAND 2006", 1369822, "WWE2K24_VC", 2, 1));
-        FlagItems.Add(new FlagItem("ARE: RAW 2002", 1362446, "WWE2K24_VC", 2, 1));
-        FlagItems.Add(new FlagItem("ARE: SMACKDOWN 2002", 1354798, "WWE2K24_VC", 2, 1));
-        FlagItems.Add(new FlagItem("ARE: SUMMERSLAM 1998", 1361518, "WWE2K24_VC", 2, 1));
-        FlagItems.Add(new FlagItem("TTL: ECW CHAMPIONSHIP '08-'10", 1347982, "WWE2K24_VC", 2, 1));
+        FlagItems.Add(new FlagItem("ECW ONE NIGHT STAND 2006", 1369822, "WWE2K24_VC", 2, 1) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("RAW 2002", 1362446, "WWE2K24_VC", 2, 1) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("SMACKDOWN 2002", 1354798, "WWE2K24_VC", 2, 1) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("SUMMERSLAM 1998", 1361518, "WWE2K24_VC", 2, 1) { SubCategory = "Arenas" });
+        FlagItems.Add(new FlagItem("ECW CHAMPIONSHIP '08-'10", 1347982, "WWE2K24_VC", 2, 1) { SubCategory = "Championships" });
 
         System.Diagnostics.Debug.WriteLine($"WWE2K24 Items populated: {FlagItems.Count}");
         System.Diagnostics.Debug.WriteLine($"WWE2K24 MyFaction Items: {FlagItems.Where(x => x.Category == "WWE2K24_MyFACTION").Count()}");

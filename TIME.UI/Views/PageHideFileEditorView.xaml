@@ -68,7 +68,14 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="CardAccountDetails" Height="32" Width="32" VerticalAlignment="Center" />
-                                    <TextBlock Margin="10 0 0 0" VerticalAlignment="Center" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Text="{Binding}"/>
+                                    <TextBlock Margin="10 0 0 0" VerticalAlignment="Center" Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} ({1})">
+                                                <Binding />
+                                                <Binding Path="DataContext.WWE2K24MyFactionItems.Count" RelativeSource="{RelativeSource AncestorType=GroupBox}" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                         </GroupBox.HeaderTemplate>
@@ -99,7 +106,14 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="AccountStar" Height="32" Width="32" VerticalAlignment="Center" />
-                                    <TextBlock Margin="10 0 0 0" VerticalAlignment="Center" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Text="{Binding}"/>
+                                    <TextBlock Margin="10 0 0 0" VerticalAlignment="Center" Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} ({1})">
+                                                <Binding />
+                                                <Binding Path="DataContext.WWE2K24MyRiseItems.Count" RelativeSource="{RelativeSource AncestorType=GroupBox}" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                         </GroupBox.HeaderTemplate>
@@ -143,23 +157,74 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="AccountStar" Height="32" Width="32" VerticalAlignment="Center" />
-                                    <TextBlock Margin="10 0 0 0" VerticalAlignment="Center" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Text="{Binding}"/>
+                                    <TextBlock Margin="8 0 0 0" VerticalAlignment="Center" Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} ({1})">
+                                                <Binding />
+                                                <Binding Path="DataContext.WWE2K24ShowcaseItems.Count" RelativeSource="{RelativeSource AncestorType=GroupBox}" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                         </GroupBox.HeaderTemplate>
                         <ItemsControl ItemsSource="{Binding WWE2K24ShowcaseItems}">
+                            <ItemsControl.Resources>
+                                <Style TargetType="CheckBox" BasedOn="{StaticResource MaterialDesignCheckBox}">
+                                    <Setter Property="Command" Value="{Binding DataContext.ToggleFlagItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                    <Setter Property="CommandParameter" Value="{Binding}" />
+                                    <Setter Property="Content" Value="{Binding Name}" />
+                                    <Setter Property="IsChecked" Value="{Binding IsChecked}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}" />
+                                    <Setter Property="FontSize" Value="12" />
+                                    <Setter Property="materialDesign:CheckBoxAssist.CheckBoxSize" Value="25" />
+                                    <Setter Property="Margin" Value="8 4 0 4" />
+                                </Style>
+                            </ItemsControl.Resources>
+                            <ItemsControl.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.ContainerStyle>
+                                        <Style TargetType="{x:Type GroupItem}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type GroupItem}">
+                                                        <Grid Margin="0,8,0,8">
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto"/>
+                                                                <RowDefinition Height="Auto"/>
+                                                            </Grid.RowDefinitions>
+                                                            <Border 
+                                                                Grid.Row="0"
+                                                                Background="{DynamicResource MaterialDesignDivider}"
+                                                                Padding="8">
+                                                                <DockPanel>
+                                                                    <TextBlock 
+                                                                        DockPanel.Dock="Left"
+                                                                        Text="{Binding Name}" 
+                                                                        Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
+                                                                        Margin="8,0,0,0"
+                                                                        Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                                                    <TextBlock 
+                                                                        DockPanel.Dock="Right"
+                                                                        Text="{Binding ItemCount}"
+                                                                        Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                                        Margin="8,0,8,0"
+                                                                        VerticalAlignment="Center"
+                                                                        Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                                                </DockPanel>
+                                                            </Border>
+                                                            <ItemsPresenter Grid.Row="1" Margin="16,8,0,0"/>
+                                                        </Grid>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </GroupStyle.ContainerStyle>
+                                </GroupStyle>
+                            </ItemsControl.GroupStyle>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <CheckBox
-                                        Content="{Binding Name}"
-                                        IsChecked="{Binding IsChecked}"
-                                        Command="{Binding DataContext.ToggleFlagItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        Foreground="{DynamicResource MaterialDesignBody}"
-                                        Style="{StaticResource MaterialDesignCheckBox}"
-                                        FontSize="12"
-                                        materialDesign:CheckBoxAssist.CheckBoxSize="25"
-                                        Margin="8 12 0 0" />
+                                    <CheckBox />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -174,7 +239,14 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="AccountStar" Height="32" Width="32" VerticalAlignment="Center" />
-                                    <TextBlock Margin="10 0 0 0" VerticalAlignment="Center" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Text="{Binding}"/>
+                                    <TextBlock Margin="10 0 0 0" VerticalAlignment="Center" Style="{StaticResource MaterialDesignSubtitle1TextBlock}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} ({1})">
+                                                <Binding />
+                                                <Binding Path="DataContext.WWE2K24VCItems.Count" RelativeSource="{RelativeSource AncestorType=GroupBox}" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                         </GroupBox.HeaderTemplate>
